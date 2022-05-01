@@ -2,13 +2,14 @@ import io
 import struct
 import json
 import yaml
-from rubymarshal.reader import loads
-from rubymarshal.classes import RubyObject, UserDef
+import traceback
+from marshal_reader import loads
+from rubymarshal.classes import RubyObject, UserDef, RubyString
 
-def _rvdata2dict(rvdata_obj, serialize = True):
+def _rvdata2dict(rvdata_obj, serialize=True):
     res = {}
 
-    if not hasattr(rvdata_obj, 'attributes') and type(rvdata_obj) not in [dict, list]:
+    if not hasattr(rvdata_obj, 'attributes') and type(rvdata_obj) not in [dict, list] or isinstance(rvdata_obj, RubyString):
         return rvdata_obj
 
     child_nodes = []
@@ -39,11 +40,12 @@ def _rvdata2dict(rvdata_obj, serialize = True):
                 res.append(_serialize_obj(converted_obj, inner_obj))
             continue
 
+
         if type(inner_obj) == UserDef and inner_obj.ruby_class_name == 'Table':
             table = Table(inner_obj)
             converted_obj = table.serialize()
         else:
-            converted_obj = _rvdata2dict(inner_obj, serialize = False)
+            converted_obj = _rvdata2dict(inner_obj, serialize=False)
 
         if type(child_nodes) != list:
             res[attr] = _serialize_obj(converted_obj, inner_obj)
@@ -78,6 +80,8 @@ def parse_events(dic):
         for cmd in dic['val']['@parameters']['val']:
             if cmd['type'] == 'bytes':
                 events.append(cmd['val'])
+            elif cmd['type'] == 'RubyString':
+                events.append(cmd['val'].text)
         return events
     for key, item in dic.items():
         if isinstance(item, dict):
@@ -137,7 +141,13 @@ class RvdataParser:
         pass
     
     def parse_rvdata(self, input_file):
-        self._data = _rvdata2dict(loads(open(input_file, 'rb').read()))
+        try:
+            rvdata = loads(open(input_file, 'rb').read())
+            self._data = _rvdata2dict(rvdata)
+        except:
+            print(traceback.print_exc())
+            print(f"failed to load {input_file}")
+            pass
 
     def to_json(self, output_file):
         json.dump(self._data, open(output_file, 'w'))
