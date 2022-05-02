@@ -135,6 +135,7 @@ class Table:
         return obj
 
 class RvdataParser:
+    ignores = ['Areas', 'Scripts']
     _data = {}
 
     def __init__(self):
@@ -145,9 +146,15 @@ class RvdataParser:
             rvdata = loads(open(input_file, 'rb').read())
             self._data = _rvdata2dict(rvdata)
         except:
-            print(traceback.print_exc())
-            print(f"failed to load {input_file}")
-            pass
+            self._data = {}
+            verbose = True
+            for s in self.ignores:
+                if s in input_file:
+                    verbose = False
+                    break
+            if verbose:
+                print(traceback.print_exc())
+            print(f"failed to parse {input_file}")
 
     def to_json(self, output_file):
         json.dump(self._data, open(output_file, 'w'))
