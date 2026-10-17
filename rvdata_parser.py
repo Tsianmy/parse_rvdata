@@ -166,6 +166,6 @@ class RvdataParser:
     
     def events_to_txt(self, output_file):
         events = parse_events(self._data)
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             for e in events:
                 f.write(e + '\n')
