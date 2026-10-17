@@ -157,10 +157,10 @@ class RvdataParser:
             print(f"failed to parse {input_file}")
 
     def to_json(self, output_file):
-        json.dump(self._data, open(output_file, 'w'))
+        json.dump(self._data, open(output_file, 'w', encoding='utf-8'))
 
     def to_yaml(self, output_file):
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             yaml.dump(self._data, f,
                 default_flow_style=False, encoding='utf-8', allow_unicode=True)
     
